@@ -9,11 +9,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>; // Update to match Next.js expectations
 };
 
 const ProductDetails = async ({ params }: Props) => {
-  const { id } = params;
+  const { id } = await params;
   const product: Product | null = await getProductById(id);
 
   if (!product) {
