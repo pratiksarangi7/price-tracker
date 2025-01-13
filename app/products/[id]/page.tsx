@@ -13,10 +13,13 @@ type Props = {
 };
 
 const ProductDetails = async ({ params }: Props) => {
-  const { id } = await params;
-  const product: Product = await getProductById(id);
+  const { id } = params;
+  const product: Product | null = await getProductById(id);
 
-  if (!product) redirect("/");
+  if (!product) {
+    redirect("/");
+    return null;
+  }
 
   const similarProducts = await getSimilarProducts(id);
 
@@ -189,7 +192,7 @@ const ProductDetails = async ({ params }: Props) => {
         </button>
       </div>
 
-      {similarProducts && similarProducts?.length > 0 && (
+      {similarProducts && similarProducts.length > 0 && (
         <div className="py-14 flex flex-col gap-2 w-full">
           <p className="section-text">Similar Products</p>
 
