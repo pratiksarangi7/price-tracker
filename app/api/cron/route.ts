@@ -11,17 +11,19 @@ import Product from "@/lib/models/product.model";
 import { scrapeAmazonProduct } from "@/lib/scraper";
 import { generateEmailBody, sendEmail } from "@/lib/nodemailer";
 
-export const maxDuration = 60; // This function can run for a maximum of 300 seconds
+export const maxDuration = 300; // This function can run for a maximum of 300 seconds
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {
     connectToDB();
+
     const products = await Product.find({});
 
     if (!products) throw new Error("No product fetched");
 
+    // ======================== 1 SCRAPE LATEST PRODUCT DETAILS & UPDATE DB
     const updatedProducts = await Promise.all(
       products.map(async (currentProduct) => {
         // Scrape product
@@ -52,6 +54,7 @@ export async function GET(request: Request) {
           product
         );
 
+        // ======================== 2 CHECK EACH PRODUCT'S STATUS & SEND EMAIL ACCORDINGLY
         const emailNotifType = getEmailNotifType(
           scrapedProduct,
           currentProduct
@@ -62,13 +65,16 @@ export async function GET(request: Request) {
             title: updatedProduct.title,
             url: updatedProduct.url,
           };
+          // Construct emailContent
           const emailContent = await generateEmailBody(
             productInfo,
             emailNotifType
           );
+          // Get array of user emails
           const userEmails = updatedProduct.users.map(
             (user: any) => user.email
           );
+          // Send email notification
           await sendEmail(emailContent, userEmails);
         }
 
